@@ -95,7 +95,7 @@ const FeaturedEvents = () => {
               key={event.title}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-foreground/25"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+              <div className="relative aspect-4/3 overflow-hidden bg-muted">
                 <Image
                   src={event.image}
                   alt={event.imageAlt}

@@ -6,7 +6,7 @@ import heroBg from "@/public/images/hero-bg.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative flex h-screen min-h-[640px] w-full flex-col overflow-hidden bg-stage">
+    <section className="relative flex h-screen min-h-160 w-full flex-col overflow-hidden bg-stage">
       <Image
         src={heroBg}
         alt="A festival crowd raising their hands as confetti falls under the stage lights"
@@ -15,7 +15,7 @@ const Hero = () => {
         sizes="100vw"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-stage via-stage/55 to-stage/15" />
+      <div className="absolute inset-0 bg-linear-to-t from-stage via-stage/55 to-stage/15" />
 
       <Nav />
 
