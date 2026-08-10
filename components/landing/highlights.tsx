@@ -67,30 +67,28 @@ const Highlights = () => {
         </p>
       </div>
 
-      <div className="relative left-1/2 mt-10 w-screen -translate-x-1/2">
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-2 md:scroll-px-10 md:px-10">
-          {moments.map((moment) => (
-            <figure
-              key={moment.caption}
-              className={`group relative h-75 shrink-0 snap-start overflow-hidden rounded-2xl sm:h-105 md:h-120 ${sizeClasses[moment.size]}`}
-            >
-              <Image
-                src={moment.image}
-                alt={moment.imageAlt}
-                fill
-                sizes="(min-width: 768px) 520px, 70vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-stage/85 via-stage/0 to-stage/0" />
-              <figcaption className="absolute inset-x-0 bottom-0 p-5">
-                <p className="font-medium text-white">{moment.caption}</p>
-                <p className="mt-0.5 font-mono text-xs tracking-wide text-white/60 uppercase">
-                  {moment.venue}
-                </p>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+      <div className="scrollbar-none mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-2 md:scroll-px-10 md:px-10">
+        {moments.map((moment) => (
+          <figure
+            key={moment.caption}
+            className={`group relative h-75 shrink-0 snap-start overflow-hidden rounded-2xl sm:h-105 md:h-120 ${sizeClasses[moment.size]}`}
+          >
+            <Image
+              src={moment.image}
+              alt={moment.imageAlt}
+              fill
+              sizes="(min-width: 768px) 520px, 70vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-stage/85 via-stage/0 to-stage/0" />
+            <figcaption className="absolute inset-x-0 bottom-0 p-5">
+              <p className="font-medium text-white">{moment.caption}</p>
+              <p className="mt-0.5 font-mono text-xs tracking-wide text-white/60 uppercase">
+                {moment.venue}
+              </p>
+            </figcaption>
+          </figure>
+        ))}
       </div>
     </section>
   );
