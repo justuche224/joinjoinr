@@ -1,5 +1,12 @@
 export type Category = "Concerts" | "Sports" | "Theatre" | "Festivals";
 
+export const categories: Category[] = [
+  "Sports",
+  "Concerts",
+  "Theatre",
+  "Festivals",
+];
+
 export type TicketTier = {
   name: string;
   price: number;

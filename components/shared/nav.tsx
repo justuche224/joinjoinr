@@ -1,9 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { Search } from "lucide-react";
-
-const categories = ["Sports", "Concerts", "Theatre", "Festivals"];
+import { categories } from "@/lib/events";
 
 const Nav = () => {
   return (
@@ -20,7 +19,7 @@ const Nav = () => {
           {categories.map((category) => (
             <li key={category}>
               <Link
-                href="#"
+                href={`/events?category=${category}`}
                 className="transition-colors hover:text-white"
               >
                 {category}
@@ -30,23 +29,31 @@ const Nav = () => {
         </ul>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-lg"
+          <Link
+            href="/events"
             aria-label="Search events"
-            className="text-white hover:bg-white/10 hover:text-white"
+            className={buttonVariants({
+              variant: "ghost",
+              size: "icon-lg",
+              className: "text-white hover:bg-white/10 hover:text-white",
+            })}
           >
             <Search />
-          </Button>
+          </Link>
           <Button
             variant="ghost"
             className="hidden text-white hover:bg-white/10 hover:text-white sm:inline-flex"
           >
             Log in
           </Button>
-          <Button className="rounded-full bg-white px-4 text-stage hover:bg-white/85">
+          <Link
+            href="/events"
+            className={buttonVariants({
+              className: "rounded-full bg-white px-4 text-stage hover:bg-white/85",
+            })}
+          >
             Get tickets
-          </Button>
+          </Link>
         </div>
       </div>
     </header>

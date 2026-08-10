@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import { Button } from "../ui/button";
+import Link from "next/link";
+import { buttonVariants } from "../ui/button";
 import Nav from "../shared/nav";
 import heroBg from "@/public/images/hero-bg.jpg";
 
@@ -33,15 +34,25 @@ const Hero = () => {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Button className="btn-ticket h-12 rounded-xl bg-brass px-8 text-[0.9rem] font-semibold text-stage hover:bg-brass/90">
+            <Link
+              href="/events"
+              className={buttonVariants({
+                className:
+                  "btn-ticket h-12 rounded-xl bg-brass px-8 text-[0.9rem] font-semibold text-stage hover:bg-brass/90",
+              })}
+            >
               Get tickets
-            </Button>
-            <Button
-              variant="outline"
-              className="h-12 rounded-full border-white/25 bg-transparent px-7 text-[0.9rem] font-medium text-white hover:bg-white/10 hover:text-white"
+            </Link>
+            <Link
+              href="/events"
+              className={buttonVariants({
+                variant: "outline",
+                className:
+                  "h-12 rounded-full border-white/25 bg-transparent px-7 text-[0.9rem] font-medium text-white hover:bg-white/10 hover:text-white",
+              })}
             >
               See what&apos;s on
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
