@@ -1,5 +1,6 @@
 import Hero from "@/components/landing/hero";
 import FeaturedEvents from "@/components/landing/featured-events";
+import Highlights from "@/components/landing/highlights";
 import React from "react";
 
 const page = () => {
@@ -7,6 +8,7 @@ const page = () => {
     <>
       <Hero />
       <FeaturedEvents />
+      <Highlights />
     </>
   );
 };
