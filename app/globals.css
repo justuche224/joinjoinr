@@ -132,12 +132,19 @@
   }
 }
 
-/* Ticket-stub notches for the primary hero CTA — the die-cut circles read as
-   a torn ticket edge against the scrim behind it. */
+/* Ticket-stub notches for ticket-purchase CTAs — the die-cut circles read as
+   a torn ticket edge against whatever sits behind the button. Set
+   --btn-ticket-notch to match that background (defaults to the dark hero
+   scrim; .btn-ticket-card switches it to the card background for CTAs that
+   sit on a light panel). */
 @layer components {
   .btn-ticket {
     position: relative;
     isolation: isolate;
+    --btn-ticket-notch: var(--color-stage);
+  }
+  .btn-ticket.btn-ticket-card {
+    --btn-ticket-notch: var(--color-card);
   }
   .btn-ticket::before,
   .btn-ticket::after {
@@ -148,7 +155,7 @@
     width: 0.8rem;
     height: 0.8rem;
     border-radius: 9999px;
-    background: var(--color-stage);
+    background: var(--btn-ticket-notch);
     transform: translateY(-50%);
   }
   .btn-ticket::before {
