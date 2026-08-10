@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,8 @@ const events: {
   month: string;
   day: string;
   price: string;
+  image: string;
+  imageAlt: string;
 }[] = [
   {
     category: "Concerts",
@@ -29,6 +32,8 @@ const events: {
     month: "Aug",
     day: "22",
     price: "from $48",
+    image: "/images/events/concerts.jpg",
+    imageAlt: "A crowd facing a colorful stage light show at an outdoor night concert",
   },
   {
     category: "Sports",
@@ -38,6 +43,8 @@ const events: {
     month: "Sep",
     day: "05",
     price: "from $32",
+    image: "/images/events/sports.jpg",
+    imageAlt: "Fans watching a soccer match from the stands under stadium floodlights",
   },
   {
     category: "Theatre",
@@ -47,6 +54,8 @@ const events: {
     month: "Sep",
     day: "14",
     price: "from $65",
+    image: "/images/events/theatre.jpg",
+    imageAlt: "Rows of empty seats facing a small, ornate theatre stage",
   },
   {
     category: "Festivals",
@@ -56,6 +65,8 @@ const events: {
     month: "Oct",
     day: "03",
     price: "from $89",
+    image: "/images/events/festivals.jpg",
+    imageAlt: "A crowd gathered in front of a large, colorful festival main stage at sunset",
   },
 ];
 
@@ -84,6 +95,16 @@ const FeaturedEvents = () => {
               key={event.title}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-foreground/25"
             >
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                <Image
+                  src={event.image}
+                  alt={event.imageAlt}
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+              </div>
+
               <div className="flex flex-1 flex-col gap-3 p-6">
                 <span
                   className={cn(
