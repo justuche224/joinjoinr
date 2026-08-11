@@ -62,7 +62,10 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+      <p className="mb-2 font-mono text-xs tracking-[0.25em] text-brass-ink uppercase">
+        Password reset
+      </p>
+      <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
         Set a new password
       </h1>
       <p className="mt-1.5 text-sm text-muted-foreground">
@@ -96,7 +99,11 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
 
         {formError && <p className="text-sm text-destructive">{formError}</p>}
 
-        <Button type="submit" disabled={loading} className="mt-1 h-11">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="btn-ticket btn-ticket-card mt-1 h-12 w-full rounded-xl bg-brass text-[0.9rem] font-semibold text-stage hover:bg-brass/90"
+        >
           {loading ? "Updating…" : "Update password"}
         </Button>
       </form>

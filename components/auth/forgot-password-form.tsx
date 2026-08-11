@@ -52,7 +52,10 @@ const ForgotPasswordForm = () => {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+      <p className="mb-2 font-mono text-xs tracking-[0.25em] text-brass-ink uppercase">
+        Password reset
+      </p>
+      <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
         Reset your password
       </h1>
       <p className="mt-1.5 text-sm text-muted-foreground">
@@ -70,7 +73,11 @@ const ForgotPasswordForm = () => {
           onChange={(e) => setEmail(e.target.value)}
           error={error ?? undefined}
         />
-        <Button type="submit" disabled={loading} className="mt-1 h-11">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="btn-ticket btn-ticket-card mt-1 h-12 w-full rounded-xl bg-brass text-[0.9rem] font-semibold text-stage hover:bg-brass/90"
+        >
           {loading ? "Sending…" : "Send reset link"}
         </Button>
       </form>

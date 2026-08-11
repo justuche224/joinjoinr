@@ -76,7 +76,10 @@ const SignupForm = () => {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+      <p className="mb-2 font-mono text-xs tracking-[0.25em] text-brass-ink uppercase">
+        Account
+      </p>
+      <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
         Create an account
       </h1>
       <p className="mt-1.5 text-sm text-muted-foreground">
@@ -129,21 +132,25 @@ const SignupForm = () => {
 
         {formError && <p className="text-sm text-destructive">{formError}</p>}
 
-        <Button type="submit" disabled={loading} className="mt-1 h-11">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="btn-ticket btn-ticket-card mt-1 h-12 w-full rounded-xl bg-brass text-[0.9rem] font-semibold text-stage hover:bg-brass/90"
+        >
           {loading ? "Creating account…" : "Create account"}
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+      <div className="my-6 flex items-center gap-3 font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
         <span className="h-px flex-1 bg-border" />
-        or
+        Or
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <Button
         type="button"
         variant="outline"
-        className="h-11 w-full"
+        className="h-12 w-full rounded-xl"
         onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" })}
       >
         Continue with Google
