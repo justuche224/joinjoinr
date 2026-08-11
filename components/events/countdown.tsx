@@ -30,6 +30,10 @@ const Countdown = ({ target }: { target: string }) => {
   const [remaining, setRemaining] = useState<Remaining | null>(null);
 
   useEffect(() => {
+    // Computed from Date.now(), which must not run during render (server and
+    // client would disagree) — syncing it from an effect is the correct
+    // pattern here, not a derivable-during-render value.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRemaining(getRemaining(target));
     const id = setInterval(() => setRemaining(getRemaining(target)), 1000);
     return () => clearInterval(id);

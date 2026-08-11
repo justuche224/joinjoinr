@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Button, buttonVariants } from "../ui/button";
+import { buttonVariants } from "../ui/button";
 import { Search } from "lucide-react";
 import { categories } from "@/lib/events";
 
@@ -40,12 +40,15 @@ const Nav = () => {
           >
             <Search />
           </Link>
-          <Button
-            variant="ghost"
-            className="hidden text-white hover:bg-white/10 hover:text-white sm:inline-flex"
+          <Link
+            href="/login"
+            className={buttonVariants({
+              variant: "ghost",
+              className: "hidden text-white hover:bg-white/10 hover:text-white sm:inline-flex",
+            })}
           >
             Log in
-          </Button>
+          </Link>
           <Link
             href="/events"
             className={buttonVariants({
