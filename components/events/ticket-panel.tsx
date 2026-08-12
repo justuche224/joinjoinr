@@ -82,7 +82,7 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
                   {tier.description}
                 </p>
                 <p className="mt-1 font-mono text-sm text-foreground">
-                  ${tier.price}
+                  ₦{tier.price.toLocaleString()}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
@@ -118,7 +118,7 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
             {ticketCount} {ticketCount === 1 ? "ticket" : "tickets"}
           </p>
           <p className="font-heading text-2xl font-semibold text-foreground">
-            ${total}
+            ₦{total.toLocaleString()}
           </p>
         </div>
         <Button

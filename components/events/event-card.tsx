@@ -56,7 +56,7 @@ const EventCard = ({ event }: { event: EventDetail }) => {
         </div>
         <div className="flex items-center gap-2.5">
           <span className="text-sm font-medium text-foreground">
-            from ${startingPrice(event)}
+            from ₦{startingPrice(event).toLocaleString()}
           </span>
           <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
         </div>
