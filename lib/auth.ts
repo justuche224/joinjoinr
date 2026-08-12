@@ -26,6 +26,14 @@ export const auth = betterAuth({
       void sendResetPasswordEmail(user.email, url);
     },
   },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        default: "user",
+      },
+    },
+  },
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
