@@ -74,7 +74,7 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
           return (
             <div
               key={tier.name}
-              className="flex items-center justify-between gap-4 border-b border-dashed border-border pb-4 last:border-0 last:pb-0"
+              className="flex items-center justify-between gap-4 border-b border-dashed border-border pb-4 last:border-0"
             >
               <div>
                 <p className="font-medium text-foreground">{tier.name}</p>

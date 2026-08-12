@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm/_relations";
+import { defineRelations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index, integer } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -73,27 +73,6 @@ export const verification = pgTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
-
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-  orders: many(order),
-  tickets: many(ticket),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
 
 export const event = pgTable("event", {
   id: text("id").primaryKey(),
@@ -204,50 +183,100 @@ export const ticket = pgTable(
   ],
 );
 
-export const eventRelations = relations(event, ({ many }) => ({
-  sessions: many(eventSession),
-}));
-
-export const eventSessionRelations = relations(eventSession, ({ one, many }) => ({
-  event: one(event, {
-    fields: [eventSession.eventId],
-    references: [event.id],
+export const relations = defineRelations(
+  {
+    user,
+    session,
+    account,
+    verification,
+    event,
+    eventSession,
+    ticketTier,
+    order,
+    ticket,
+  },
+  (r) => ({
+    user: {
+      sessions: r.many.session({ from: r.user.id, to: r.session.userId }),
+      accounts: r.many.account({ from: r.user.id, to: r.account.userId }),
+      orders: r.many.order({ from: r.user.id, to: r.order.userId }),
+      tickets: r.many.ticket({ from: r.user.id, to: r.ticket.userId }),
+    },
+    session: {
+      user: r.one.user({
+        from: r.session.userId,
+        to: r.user.id,
+        optional: false,
+      }),
+    },
+    account: {
+      user: r.one.user({
+        from: r.account.userId,
+        to: r.user.id,
+        optional: false,
+      }),
+    },
+    event: {
+      sessions: r.many.eventSession({
+        from: r.event.id,
+        to: r.eventSession.eventId,
+      }),
+    },
+    eventSession: {
+      event: r.one.event({
+        from: r.eventSession.eventId,
+        to: r.event.id,
+        optional: false,
+      }),
+      tiers: r.many.ticketTier({
+        from: r.eventSession.id,
+        to: r.ticketTier.sessionId,
+      }),
+      tickets: r.many.ticket({
+        from: r.eventSession.id,
+        to: r.ticket.sessionId,
+      }),
+    },
+    ticketTier: {
+      session: r.one.eventSession({
+        from: r.ticketTier.sessionId,
+        to: r.eventSession.id,
+        optional: false,
+      }),
+      tickets: r.many.ticket({
+        from: r.ticketTier.id,
+        to: r.ticket.tierId,
+      }),
+    },
+    order: {
+      user: r.one.user({
+        from: r.order.userId,
+        to: r.user.id,
+        optional: false,
+      }),
+      tickets: r.many.ticket({ from: r.order.id, to: r.ticket.orderId }),
+    },
+    ticket: {
+      order: r.one.order({
+        from: r.ticket.orderId,
+        to: r.order.id,
+        optional: false,
+      }),
+      session: r.one.eventSession({
+        from: r.ticket.sessionId,
+        to: r.eventSession.id,
+        optional: false,
+      }),
+      tier: r.one.ticketTier({
+        from: r.ticket.tierId,
+        to: r.ticketTier.id,
+        optional: false,
+      }),
+      user: r.one.user({
+        from: r.ticket.userId,
+        to: r.user.id,
+        optional: false,
+      }),
+    },
   }),
-  tiers: many(ticketTier),
-  tickets: many(ticket),
-}));
-
-export const ticketTierRelations = relations(ticketTier, ({ one, many }) => ({
-  session: one(eventSession, {
-    fields: [ticketTier.sessionId],
-    references: [eventSession.id],
-  }),
-  tickets: many(ticket),
-}));
-
-export const orderRelations = relations(order, ({ one, many }) => ({
-  user: one(user, {
-    fields: [order.userId],
-    references: [user.id],
-  }),
-  tickets: many(ticket),
-}));
-
-export const ticketRelations = relations(ticket, ({ one }) => ({
-  order: one(order, {
-    fields: [ticket.orderId],
-    references: [order.id],
-  }),
-  session: one(eventSession, {
-    fields: [ticket.sessionId],
-    references: [eventSession.id],
-  }),
-  tier: one(ticketTier, {
-    fields: [ticket.tierId],
-    references: [ticketTier.id],
-  }),
-  user: one(user, {
-    fields: [ticket.userId],
-    references: [user.id],
-  }),
-}));
+);
