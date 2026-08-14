@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { createEvent } from "@/actions/admin";
 import { buttonVariants } from "@/components/ui/button";
+import { ImageUploader } from "@/components/admin/image-uploader";
 
 const CreateEventPage = async () => {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -79,17 +80,10 @@ const CreateEventPage = async () => {
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label htmlFor="image" className="text-sm font-medium text-foreground">
-              Image URL
+            <label className="text-sm font-medium text-foreground">
+              Event Cover Image
             </label>
-            <input
-              id="image"
-              name="image"
-              type="url"
-              required
-              className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              placeholder="https://..."
-            />
+            <ImageUploader name="image" required />
           </div>
 
           <div className="space-y-2 md:col-span-2">

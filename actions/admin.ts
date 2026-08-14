@@ -27,6 +27,10 @@ export async function createEvent(formData: FormData) {
   const address = formData.get("address") as string;
   const image = formData.get("image") as string;
   const description = formData.get("description") as string;
+
+  if (!title || !slug || !image) {
+    throw new Error("Missing required event fields");
+  }
   
   // Create id
   const id = crypto.randomUUID();
