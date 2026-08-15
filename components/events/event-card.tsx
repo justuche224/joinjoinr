@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { cn, formatKoboToNaira } from "@/lib/utils";
-import { formatMonthDay, startingPrice, type Category, type EventDetail } from "@/lib/events";
+import { formatMonthDay, startingPrice, type Category, type EventDetail } from "@/lib/events-types";
 
 export const categoryColor: Record<Category, string> = {
   Concerts: "text-brass-ink",

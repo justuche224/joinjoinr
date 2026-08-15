@@ -1,7 +1,7 @@
 import React from "react";
 import Nav from "../shared/nav";
 import Countdown from "./countdown";
-import type { EventDetail } from "@/lib/events";
+import type { EventDetail } from "@/lib/events-types";
 
 const EventHero = ({
   event,

@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { buttonVariants } from "../ui/button";
 import { Search } from "lucide-react";
-import { categories } from "@/lib/events";
+import { categories } from "@/lib/events-types";
 import Image from "next/image";
 
 const Nav = () => {

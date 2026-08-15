@@ -1,12 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Minus, Plus, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn, formatKoboToNaira } from "@/lib/utils";
-import type { Session } from "@/lib/events";
+import type { Session } from "@/lib/events-types";
+import { authClient } from "@/lib/auth-client";
+import { createEventPaymentCheckout } from "@/actions/payment";
 
 const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data: sessionAuth, isPending: isAuthLoading } = authClient.useSession();
+
+  const [selectedId, setSelectedId] = useState(sessions?.[0]?.id);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
   if (!sessions || sessions.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 text-center">
@@ -20,31 +32,76 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
     );
   }
 
-  const [selectedId, setSelectedId] = useState(sessions[0]?.id);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-
   const session = sessions.find((s) => s.id === selectedId) ?? sessions[0];
 
-  const setQty = (tierName: string, delta: number) => {
-    const key = `${session.id}:${tierName}`;
+  const setQty = (tierKey: string, delta: number) => {
+    setCheckoutError(null);
     setQuantities((prev) => ({
       ...prev,
-      [key]: Math.max(0, (prev[key] ?? 0) + delta),
+      [tierKey]: Math.max(0, (prev[tierKey] ?? 0) + delta),
     }));
   };
 
+  const getTierKey = (tier: { id?: string; name: string }) =>
+    tier.id ? `${session.id}:${tier.id}` : `${session.id}:${tier.name}`;
+
   const ticketCount = (session.tiers || []).reduce(
-    (sum, tier) => sum + (quantities[`${session.id}:${tier.name}`] ?? 0),
-    0
-  );
-  const total = (session.tiers || []).reduce(
-    (sum, tier) =>
-      sum + (quantities[`${session.id}:${tier.name}`] ?? 0) * tier.price,
+    (sum, tier) => sum + (quantities[getTierKey(tier)] ?? 0),
     0
   );
 
+  const total = (session.tiers || []).reduce(
+    (sum, tier) =>
+      sum + (quantities[getTierKey(tier)] ?? 0) * tier.price,
+    0
+  );
+
+  const handleCheckout = async () => {
+    setCheckoutError(null);
+
+    // 1. If not authenticated, redirect to login with callbackUrl
+    if (!sessionAuth?.user) {
+      const returnPath = pathname || "/events";
+      router.push(`/login?callbackUrl=${encodeURIComponent(returnPath)}`);
+      return;
+    }
+
+    // 2. Prepare items payload
+    const items = (session.tiers || [])
+      .map((tier) => ({
+        tierId: tier.id ?? "",
+        quantity: quantities[getTierKey(tier)] ?? 0,
+      }))
+      .filter((item) => item.tierId && item.quantity > 0);
+
+    if (items.length === 0) {
+      setCheckoutError("Please select at least 1 ticket.");
+      return;
+    }
+
+    try {
+      setIsCheckingOut(true);
+      const result = await createEventPaymentCheckout({
+        sessionId: session.id,
+        items,
+      });
+
+      if (result?.cashierUrl) {
+        window.location.href = result.cashierUrl;
+      } else {
+        throw new Error("Unable to retrieve checkout URL from payment gateway.");
+      }
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      setCheckoutError(
+        err.message || "Failed to initiate payment. Please try again."
+      );
+      setIsCheckingOut(false);
+    }
+  };
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       {sessions.length > 1 && (
         <div className="mb-6">
           <p className="mb-3 font-mono text-xs tracking-[0.15em] text-muted-foreground uppercase">
@@ -55,9 +112,13 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
               <button
                 key={s.id}
                 type="button"
-                onClick={() => setSelectedId(s.id)}
+                disabled={isCheckingOut}
+                onClick={() => {
+                  setSelectedId(s.id);
+                  setCheckoutError(null);
+                }}
                 className={cn(
-                  "rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer",
+                  "rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer disabled:opacity-50",
                   s.id === session.id
                     ? "border-foreground bg-foreground text-background"
                     : "border-border text-foreground hover:border-foreground/40"
@@ -87,11 +148,11 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
       ) : (
         <div className="flex flex-col gap-4">
           {session.tiers.map((tier) => {
-            const key = `${session.id}:${tier.name}`;
-            const qty = quantities[key] ?? 0;
+            const tierKey = getTierKey(tier);
+            const qty = quantities[tierKey] ?? 0;
             return (
               <div
-                key={tier.name}
+                key={tier.id || tier.name}
                 className="flex items-center justify-between gap-4 border-b border-dashed border-border pb-4 last:border-0"
               >
                 <div>
@@ -108,8 +169,8 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
                 <div className="flex shrink-0 items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setQty(tier.name, -1)}
-                    disabled={qty === 0}
+                    onClick={() => setQty(tierKey, -1)}
+                    disabled={qty === 0 || isCheckingOut}
                     aria-label={`Remove one ${tier.name} ticket`}
                     className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-foreground/40 disabled:opacity-30 cursor-pointer"
                   >
@@ -120,9 +181,10 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setQty(tier.name, 1)}
+                    onClick={() => setQty(tierKey, 1)}
+                    disabled={isCheckingOut}
                     aria-label={`Add one ${tier.name} ticket`}
-                    className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-foreground/40 cursor-pointer"
+                    className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-foreground/40 disabled:opacity-30 cursor-pointer"
                   >
                     <Plus className="size-3.5" />
                   </button>
@@ -130,6 +192,13 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {checkoutError && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-xs text-destructive">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{checkoutError}</span>
         </div>
       )}
 
@@ -143,10 +212,20 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
           </p>
         </div>
         <Button
-          disabled={ticketCount === 0}
+          onClick={handleCheckout}
+          disabled={ticketCount === 0 || isCheckingOut || isAuthLoading}
           className="btn-ticket btn-ticket-card h-12 rounded-xl bg-brass px-8 text-[0.9rem] font-semibold text-stage hover:bg-brass/90 disabled:opacity-40"
         >
-          Get tickets
+          {isCheckingOut ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Redirecting…
+            </>
+          ) : !sessionAuth?.user ? (
+            "Log in to buy"
+          ) : (
+            "Get tickets"
+          )}
         </Button>
       </div>
     </div>

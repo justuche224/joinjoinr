@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { isStrongPassword, passwordRequirementsText } from "@/lib/password";
@@ -10,7 +11,14 @@ import FormField from "./form-field";
 
 type Errors = { name?: string; email?: string; password?: string; confirmPassword?: string };
 
-const SignupForm = () => {
+interface SignupFormProps {
+  callbackUrl?: string;
+}
+
+const SignupForm = ({ callbackUrl: initialCallbackUrl }: SignupFormProps) => {
+  const searchParams = useSearchParams();
+  const callbackUrl = initialCallbackUrl || searchParams.get("callbackUrl") || "/dashboard";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +48,7 @@ const SignupForm = () => {
       name: name.trim(),
       email,
       password,
-      callbackURL: "/verify-email",
+      callbackURL: callbackUrl !== "/dashboard" ? `/verify-email?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/verify-email",
     });
     setLoading(false);
 
@@ -50,6 +58,10 @@ const SignupForm = () => {
     }
     setSubmitted(true);
   };
+
+  const loginLink = callbackUrl && callbackUrl !== "/dashboard"
+    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/login";
 
   if (submitted) {
     return (
@@ -65,7 +77,7 @@ const SignupForm = () => {
           Click it to activate your account.
         </p>
         <Link
-          href="/login"
+          href={loginLink}
           className="mt-6 inline-block text-sm font-medium text-brass-ink hover:underline"
         >
           Back to log in
@@ -151,14 +163,14 @@ const SignupForm = () => {
         type="button"
         variant="outline"
         className="h-12 w-full rounded-xl"
-        onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" })}
+        onClick={() => authClient.signIn.social({ provider: "google", callbackURL: callbackUrl })}
       >
         Continue with Google
       </Button>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-foreground hover:underline">
+        <Link href={loginLink} className="font-medium text-foreground hover:underline">
           Log in
         </Link>
       </p>

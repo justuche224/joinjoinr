@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import Nav from "../shared/nav";
 import EventCard from "./event-card";
 import { cn } from "@/lib/utils";
-import { categories, startingPrice, type Category, type EventDetail } from "@/lib/events";
+import { categories, startingPrice, type Category, type EventDetail } from "@/lib/events-types";
 
 const ALL = "All" as const;
 type CategoryFilter = Category | typeof ALL;
