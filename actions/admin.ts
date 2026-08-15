@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { event, eventSession, ticketTier, ticket } from "@/db/schema";
 import { redirect } from "next/navigation";
+import { slugify } from "@/lib/utils";
 
 // Utility to verify admin
 async function verifyAdmin() {
@@ -19,16 +20,30 @@ async function verifyAdmin() {
 export async function createEvent(formData: FormData) {
   await verifyAdmin();
 
-  const title = formData.get("title") as string;
-  const slug = formData.get("slug") as string;
+  const title = (formData.get("title") as string)?.trim();
+  const rawSlug = (formData.get("slug") as string)?.trim();
+  const slug = rawSlug ? slugify(rawSlug) : slugify(title);
   const category = formData.get("category") as string;
   const venue = formData.get("venue") as string;
   const city = formData.get("city") as string;
   const address = formData.get("address") as string;
-  const image = formData.get("image") as string;
+  const image = (formData.get("image") as string)?.trim();
+  const imagesRaw = (formData.get("images") as string)?.trim();
   const description = formData.get("description") as string;
 
-  if (!title || !slug || !image) {
+  let finalImage = image;
+  if (imagesRaw) {
+    try {
+      const parsed = JSON.parse(imagesRaw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        finalImage = parsed.length > 1 ? imagesRaw : parsed[0];
+      }
+    } catch {
+      finalImage = image;
+    }
+  }
+
+  if (!title || !slug || !finalImage) {
     throw new Error("Missing required event fields");
   }
   
@@ -43,16 +58,85 @@ export async function createEvent(formData: FormData) {
     venue,
     city,
     address,
-    image,
+    image: finalImage,
     imageAlt: `Image for ${title}`,
     description,
   });
 
+
   revalidatePath("/admin/events");
+  revalidatePath("/");
+  revalidatePath("/events");
   redirect(`/admin/events/${id}`);
 }
 
+export async function updateEvent(eventId: string, formData: FormData) {
+  await verifyAdmin();
+
+  const title = (formData.get("title") as string)?.trim();
+  const rawSlug = (formData.get("slug") as string)?.trim();
+  const slug = rawSlug ? slugify(rawSlug) : slugify(title);
+  const category = formData.get("category") as string;
+  const venue = formData.get("venue") as string;
+  const city = formData.get("city") as string;
+  const address = formData.get("address") as string;
+  const image = (formData.get("image") as string)?.trim();
+  const imagesRaw = (formData.get("images") as string)?.trim();
+  const description = formData.get("description") as string;
+
+  let finalImage = image;
+  if (imagesRaw) {
+    try {
+      const parsed = JSON.parse(imagesRaw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        finalImage = parsed.length > 1 ? imagesRaw : parsed[0];
+      }
+    } catch {
+      finalImage = image;
+    }
+  }
+
+  if (!title || !slug || !finalImage) {
+    throw new Error("Missing required event fields");
+  }
+
+  await db
+    .update(event)
+    .set({
+      title,
+      slug,
+      category,
+      venue,
+      city,
+      address,
+      image: finalImage,
+      imageAlt: `Image for ${title}`,
+      description,
+      updatedAt: new Date(),
+    })
+    .where(eq(event.id, eventId));
+
+  revalidatePath("/admin/events");
+  revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/events");
+  revalidatePath(`/events/${slug}`);
+  redirect(`/admin/events/${eventId}`);
+}
+
+export async function deleteEvent(eventId: string) {
+  await verifyAdmin();
+
+  await db.delete(event).where(eq(event.id, eventId));
+
+  revalidatePath("/admin/events");
+  revalidatePath("/");
+  revalidatePath("/events");
+  redirect("/admin/events");
+}
+
 export async function createSession(eventId: string, formData: FormData) {
+
   await verifyAdmin();
 
   const label = formData.get("label") as string;
@@ -72,6 +156,48 @@ export async function createSession(eventId: string, formData: FormData) {
   });
 
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/events");
+}
+
+export async function updateSession(sessionId: string, eventId: string, formData: FormData) {
+  await verifyAdmin();
+
+  const label = (formData.get("label") as string)?.trim();
+  const time = (formData.get("time") as string)?.trim();
+  const datetime = formData.get("datetime") as string;
+  const doors = (formData.get("doors") as string)?.trim();
+
+  if (!label || !time || !datetime) {
+    throw new Error("Missing required session fields");
+  }
+
+  await db
+    .update(eventSession)
+    .set({
+      label,
+      time,
+      datetime: new Date(datetime),
+      doors: doors || null,
+      updatedAt: new Date(),
+    })
+    .where(eq(eventSession.id, sessionId));
+
+  revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/events");
+}
+
+export async function deleteSession(sessionId: string, eventId: string) {
+  await verifyAdmin();
+
+  await db
+    .delete(eventSession)
+    .where(eq(eventSession.id, sessionId));
+
+  revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/events");
 }
 
 export async function createTier(sessionId: string, eventId: string, formData: FormData) {
@@ -94,7 +220,22 @@ export async function createTier(sessionId: string, eventId: string, formData: F
   });
 
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/events");
 }
+
+export async function deleteTier(tierId: string, eventId: string) {
+  await verifyAdmin();
+
+  await db
+    .delete(ticketTier)
+    .where(eq(ticketTier.id, tierId));
+
+  revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/events");
+}
+
 
 export async function verifyTicket(formData: FormData): Promise<void> {
   await verifyAdmin();

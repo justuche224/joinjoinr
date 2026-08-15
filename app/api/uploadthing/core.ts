@@ -7,10 +7,12 @@ const f = createUploadthing();
 export const ourFileRouter = {
   eventImage: f({
     image: {
-      maxFileSize: "4MB",
-      maxFileCount: 1,
+      maxFileSize: "16MB",
+      maxFileCount: 5,
     },
   })
+
+
     .middleware(async () => {
       const session = await auth.api.getSession({
         headers: await headers(),
