@@ -36,6 +36,9 @@ export type EventDetail = {
   images?: string[];
   imageAlt?: string;
   description: string;
+  commentCount?: number;
+  likeCount?: number;
+  shareCount?: number;
   sessions: Session[];
 };
 

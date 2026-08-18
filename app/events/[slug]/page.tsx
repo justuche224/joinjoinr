@@ -7,6 +7,11 @@ import { getEventBySlug, getEvents } from "@/lib/events";
 import EventHero from "@/components/events/event-hero";
 import TicketPanel from "@/components/events/ticket-panel";
 import Footer from "@/components/shared/footer";
+import { SocialActionBar } from "@/components/events/social-action-bar";
+import { CommentSection } from "@/components/events/comment-section";
+import { getEventComments, getUserEventSocialState } from "@/actions/social";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -62,11 +67,17 @@ const EventPage = async ({
   const { slug } = await params;
   const event = await getEventBySlug(slug);
 
-  if (!event) {
+  if (!event || !event.id) {
     notFound();
   }
 
   const nextSession = event.sessions?.[0];
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserId = session?.user?.id;
+  
+  const comments = await getEventComments(event.id);
+  const socialState = await getUserEventSocialState(event.id);
 
   return (
     <>
@@ -90,6 +101,17 @@ const EventPage = async ({
               <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground whitespace-pre-line">
                 {event.description}
               </p>
+
+              <div className="mt-8">
+                <SocialActionBar
+                  eventId={event.id}
+                  initialLikeCount={event.likeCount || 0}
+                  initialShareCount={event.shareCount || 0}
+                  initialCommentCount={event.commentCount || 0}
+                  hasLiked={socialState.hasLiked}
+                  isAuthenticated={!!currentUserId}
+                />
+              </div>
 
               {event.images && event.images.length > 1 && (
                 <div className="mt-10 border-t border-border pt-8">
@@ -124,6 +146,15 @@ const EventPage = async ({
                 <p className="text-sm text-muted-foreground">
                   {event.address}
                 </p>
+              </div>
+
+              <div className="mt-12 border-t border-border pt-4">
+                <CommentSection
+                  eventId={event.id}
+                  initialComments={comments as any}
+                  currentUserId={currentUserId}
+                  likedCommentIds={socialState.likedCommentIds}
+                />
               </div>
 
             </div>
