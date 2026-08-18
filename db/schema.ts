@@ -1,5 +1,14 @@
 import { defineRelations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  integer,
+  uniqueIndex,
+  type AnyPgColumn,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -85,6 +94,9 @@ export const event = pgTable("event", {
   image: text("image").notNull(),
   imageAlt: text("image_alt").notNull(),
   description: text("description").notNull(),
+  commentCount: integer("comment_count").default(0).notNull(),
+  likeCount: integer("like_count").default(0).notNull(),
+  shareCount: integer("share_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => /* @__PURE__ */ new Date())
@@ -186,6 +198,78 @@ export const ticket = pgTable(
   ],
 );
 
+export const comment = pgTable(
+  "comment",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    // No onDelete cascade here on purpose: user-initiated deletion goes
+    // through isDeleted (soft delete) so replies keep a valid parent.
+    // A real DELETE of a comment with children is blocked (default
+    // "no action"), not silently cascaded through the whole subthread.
+    parentId: text("parent_id").references((): AnyPgColumn => comment.id),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    content: text("content").notNull(),
+    isDeleted: boolean("is_deleted").default(false).notNull(),
+    likeCount: integer("like_count").default(0).notNull(),
+    replyCount: integer("reply_count").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("comment_eventId_idx").on(table.eventId),
+    index("comment_parentId_idx").on(table.parentId),
+    index("comment_userId_idx").on(table.userId),
+  ],
+);
+
+export const like = pgTable(
+  "like",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    targetType: text("target_type", { enum: ["event", "comment"] }).notNull(),
+    // No DB-level FK: targetId points at event.id or comment.id depending
+    // on targetType. Referential integrity is enforced in application code.
+    targetId: text("target_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("like_userId_targetType_targetId_idx").on(
+      table.userId,
+      table.targetType,
+      table.targetId,
+    ),
+    index("like_targetType_targetId_idx").on(table.targetType, table.targetId),
+  ],
+);
+
+export const eventShare = pgTable(
+  "event_share",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    platform: text("platform"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("event_share_eventId_idx").on(table.eventId),
+    index("event_share_userId_idx").on(table.userId),
+  ],
+);
+
 export const relations = defineRelations(
   {
     user,
@@ -197,6 +281,9 @@ export const relations = defineRelations(
     ticketTier,
     order,
     ticket,
+    comment,
+    like,
+    eventShare,
   },
   (r) => ({
     user: {
@@ -204,6 +291,9 @@ export const relations = defineRelations(
       accounts: r.many.account({ from: r.user.id, to: r.account.userId }),
       orders: r.many.order({ from: r.user.id, to: r.order.userId }),
       tickets: r.many.ticket({ from: r.user.id, to: r.ticket.userId }),
+      comments: r.many.comment({ from: r.user.id, to: r.comment.userId }),
+      likes: r.many.like({ from: r.user.id, to: r.like.userId }),
+      shares: r.many.eventShare({ from: r.user.id, to: r.eventShare.userId }),
     },
     session: {
       user: r.one.user({
@@ -224,6 +314,8 @@ export const relations = defineRelations(
         from: r.event.id,
         to: r.eventSession.eventId,
       }),
+      comments: r.many.comment({ from: r.event.id, to: r.comment.eventId }),
+      shares: r.many.eventShare({ from: r.event.id, to: r.eventShare.eventId }),
     },
     eventSession: {
       event: r.one.event({
@@ -277,6 +369,46 @@ export const relations = defineRelations(
       }),
       user: r.one.user({
         from: r.ticket.userId,
+        to: r.user.id,
+        optional: false,
+      }),
+    },
+    comment: {
+      event: r.one.event({
+        from: r.comment.eventId,
+        to: r.event.id,
+        optional: false,
+      }),
+      author: r.one.user({
+        from: r.comment.userId,
+        to: r.user.id,
+        optional: true,
+      }),
+      parent: r.one.comment({
+        from: r.comment.parentId,
+        to: r.comment.id,
+        optional: true,
+      }),
+      replies: r.many.comment({
+        from: r.comment.id,
+        to: r.comment.parentId,
+      }),
+    },
+    like: {
+      user: r.one.user({
+        from: r.like.userId,
+        to: r.user.id,
+        optional: false,
+      }),
+    },
+    eventShare: {
+      event: r.one.event({
+        from: r.eventShare.eventId,
+        to: r.event.id,
+        optional: false,
+      }),
+      user: r.one.user({
+        from: r.eventShare.userId,
         to: r.user.id,
         optional: false,
       }),

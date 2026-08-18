@@ -32,6 +32,9 @@ export async function getEvents(): Promise<EventDetail[]> {
         images: getAllImages(e.image),
         imageAlt: e.imageAlt || `Image for ${e.title}`,
         description: e.description,
+        commentCount: e.commentCount,
+        likeCount: e.likeCount,
+        shareCount: e.shareCount,
         sessions: e.sessions.map((s) => ({
           id: s.id,
           label: s.label,
@@ -87,6 +90,9 @@ export async function getEventBySlug(slug: string): Promise<EventDetail | undefi
         images: getAllImages(dbEvent.image),
         imageAlt: dbEvent.imageAlt || `Image for ${dbEvent.title}`,
         description: dbEvent.description,
+        commentCount: dbEvent.commentCount,
+        likeCount: dbEvent.likeCount,
+        shareCount: dbEvent.shareCount,
         sessions: dbEvent.sessions.map((s) => ({
           id: s.id,
           label: s.label,

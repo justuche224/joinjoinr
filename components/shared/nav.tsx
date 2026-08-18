@@ -13,7 +13,7 @@ const Nav = () => {
           href="/"
           className="font-heading text-lg font-semibold tracking-tight text-white"
         >
-          <Image src="/images/logo.jpeg" className="h-14 w-14 rounded-full object-cover" alt="Logo" width={100} height={100} />
+          <Image src="/images/logo.jpeg" className="h-10 w-10 rounded-full object-cover" alt="Logo" width={100} height={100} />
         </Link>
 
         <ul className="hidden items-center gap-8 font-mono text-[11px] tracking-[0.15em] text-white/65 uppercase lg:flex">

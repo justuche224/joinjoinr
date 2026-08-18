@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Heart, MessageCircle } from "lucide-react";
 import { cn, formatKoboToNaira } from "@/lib/utils";
 import { formatMonthDay, startingPrice, type Category, type EventDetail } from "@/lib/events-types";
 
@@ -45,6 +45,16 @@ const EventCard = ({ event }: { event: EventDetail }) => {
         <p className="text-sm text-muted-foreground line-clamp-1">
           {event.venue} · {event.city}
         </p>
+        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Heart className="size-3.5" />
+            <span>{event.likeCount || 0}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <MessageCircle className="size-3.5" />
+            <span>{event.commentCount || 0}</span>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between border-t border-dashed border-border px-6 py-5">
