@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 const siteUrl = "https://www.joinjoinr.com";
-const siteName = "JoinJoinr";
+const siteName = "Joinr";
 const siteDescription =
   "Discover events and book tickets in seconds. Browse concerts, sports, theatre, and festivals near you.";
 
