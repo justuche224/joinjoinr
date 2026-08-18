@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getEventBySlug, getEvents } from "@/lib/events";
@@ -12,6 +13,45 @@ export const dynamic = "force-dynamic";
 export async function generateStaticParams() {
   const events = await getEvents();
   return events.map((event) => ({ slug: event.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const event = await getEventBySlug(slug);
+
+  if (!event) {
+    return {}
+  }
+
+  const title = `${event.title} — ${event.venue}, ${event.city}`
+  const description = event.description.length > 300
+    ? `${event.description.slice(0, 297)}...`
+    : event.description
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/events/${event.slug}`,
+    },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: `/events/${event.slug}`,
+      images: event.image ? [{ url: event.image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: event.image ? [event.image] : undefined,
+    },
+  }
 }
 
 const EventPage = async ({
