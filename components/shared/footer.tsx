@@ -17,7 +17,7 @@ const Footer = () => {
               href="/"
               className="font-heading text-lg font-semibold tracking-tight text-white"
             >
-              JoinJoinR
+              JoinR
             </Link>
             <p className="mt-3 max-w-xs text-sm text-white/60">
               Tickets to the moments worth showing up for.
@@ -46,7 +46,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 JoinJoinR. All rights reserved.</p>
+          <p>© 2026 JoinR. All rights reserved.</p>
           <div className="flex items-center gap-5">
             <Link href="#" className="transition-colors hover:text-white">
               Privacy
