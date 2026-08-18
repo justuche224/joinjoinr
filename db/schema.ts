@@ -265,8 +265,8 @@ export const eventShare = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
-    index("eventShare_eventId_idx").on(table.eventId),
-    index("eventShare_userId_idx").on(table.userId),
+    index("event_share_eventId_idx").on(table.eventId),
+    index("event_share_userId_idx").on(table.userId),
   ],
 );
 
