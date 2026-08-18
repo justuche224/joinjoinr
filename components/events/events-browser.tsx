@@ -5,13 +5,19 @@ import { Search } from "lucide-react";
 import Nav from "../shared/nav";
 import EventCard from "./event-card";
 import { cn } from "@/lib/utils";
-import { events as allEvents, categories, startingPrice, type Category } from "@/lib/events";
+import { categories, startingPrice, type Category, type EventDetail } from "@/lib/events-types";
 
 const ALL = "All" as const;
 type CategoryFilter = Category | typeof ALL;
 type SortKey = "soonest" | "price-asc" | "price-desc";
 
-const EventsBrowser = ({ initialCategory }: { initialCategory?: Category }) => {
+const EventsBrowser = ({
+  allEvents = [],
+  initialCategory,
+}: {
+  allEvents?: EventDetail[];
+  initialCategory?: Category;
+}) => {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>(
     initialCategory ?? ALL
@@ -32,14 +38,17 @@ const EventsBrowser = ({ initialCategory }: { initialCategory?: Category }) => {
     });
 
     return [...list].sort((a, b) => {
-      if (sort === "price-asc") return startingPrice(a) - startingPrice(b);
-      if (sort === "price-desc") return startingPrice(b) - startingPrice(a);
-      return (
-        new Date(a.sessions[0].datetime).getTime() -
-        new Date(b.sessions[0].datetime).getTime()
-      );
+      const priceA = startingPrice(a) ?? Infinity;
+      const priceB = startingPrice(b) ?? Infinity;
+
+      if (sort === "price-asc") return priceA - priceB;
+      if (sort === "price-desc") return priceB - priceA;
+
+      const dateA = a.sessions?.[0]?.datetime ? new Date(a.sessions[0].datetime).getTime() : Infinity;
+      const dateB = b.sessions?.[0]?.datetime ? new Date(b.sessions[0].datetime).getTime() : Infinity;
+      return dateA - dateB;
     });
-  }, [query, activeCategory, sort]);
+  }, [allEvents, query, activeCategory, sort]);
 
   return (
     <>

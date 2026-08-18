@@ -9,8 +9,9 @@ type Remaining = {
   seconds: number;
 };
 
-function getRemaining(target: string): Remaining {
-  const diff = Math.max(0, new Date(target).getTime() - Date.now());
+function getRemaining(target: string | Date): Remaining {
+  const targetTime = typeof target === "string" ? new Date(target).getTime() : new Date(target).getTime();
+  const diff = Math.max(0, targetTime - Date.now());
   return {
     days: Math.floor(diff / 86_400_000),
     hours: Math.floor((diff % 86_400_000) / 3_600_000),
@@ -26,14 +27,10 @@ const units: { key: keyof Remaining; label: string }[] = [
   { key: "seconds", label: "Sec" },
 ];
 
-const Countdown = ({ target }: { target: string }) => {
+const Countdown = ({ target }: { target: string | Date }) => {
   const [remaining, setRemaining] = useState<Remaining | null>(null);
 
   useEffect(() => {
-    // Computed from Date.now(), which must not run during render (server and
-    // client would disagree) — syncing it from an effect is the correct
-    // pattern here, not a derivable-during-render value.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRemaining(getRemaining(target));
     const id = setInterval(() => setRemaining(getRemaining(target)), 1000);
     return () => clearInterval(id);

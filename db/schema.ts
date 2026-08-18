@@ -141,6 +141,9 @@ export const order = pgTable(
       .default("pending")
       .notNull(),
     paymentReference: text("payment_reference"),
+    provider: text("provider", { enum: ["opay", "korapay"] })
+      .default("opay")
+      .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => /* @__PURE__ */ new Date())

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CreditCard, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { formatKoboToNaira } from "@/lib/utils";
 
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
@@ -95,9 +96,10 @@ const AdminOrdersPage = async () => {
                     <div className="text-xs text-muted-foreground">{o.user.email}</div>
                   </td>
                   <td className="px-6 py-4 font-mono font-medium text-brass-ink">
-                    ₦{(o.totalAmount / 100).toFixed(2)}
+                    {formatKoboToNaira(o.totalAmount)}
                     <div className="text-xs text-muted-foreground mt-0.5">{o.tickets.length} ticket(s)</div>
                   </td>
+
                   <td className="px-6 py-4">
                     <StatusBadge status={o.status} />
                   </td>

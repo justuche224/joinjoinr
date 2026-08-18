@@ -1,39 +1,53 @@
 import React from "react";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { CreateEventForm } from "@/components/admin/create-event-form";
+import { db } from "@/lib/db";
+import { EditEventForm } from "@/components/admin/edit-event-form";
 
-const CreateEventPage = async () => {
+const EditEventPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || session.user.role !== "admin") {
     redirect("/");
   }
 
+  const { id } = await params;
+
+  const eventData = await db.query.event.findFirst({
+    where: { id },
+  });
+
+  if (!eventData) {
+    notFound();
+  }
+
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl pb-24">
       <div className="mb-8">
         <Link
-          href="/admin/events"
+          href={`/admin/events/${id}`}
           className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
-          Back to Events
+          Back to Event
         </Link>
         <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
-          Create New Event
+          Edit Event
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Enter the details below to create a new event. You can add sessions and tickets later.
+          Update event details, photos, venue, and description.
         </p>
       </div>
 
-      <CreateEventForm />
+      <EditEventForm event={eventData} />
     </div>
   );
 };
 
-export default CreateEventPage;
-
+export default EditEventPage;

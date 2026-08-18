@@ -3,9 +3,11 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "../ui/button";
 import EventCard from "../events/event-card";
-import { events } from "@/lib/events";
+import { getFeaturedEvents } from "@/lib/events";
 
-const FeaturedEvents = () => {
+const FeaturedEvents = async () => {
+  const events = await getFeaturedEvents(8);
+
   return (
     <section className="bg-background px-6 py-24 md:px-10 md:py-32">
       <div className="mx-auto max-w-7xl">
@@ -27,11 +29,18 @@ const FeaturedEvents = () => {
           </Link>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {events.map((event) => (
-            <EventCard key={event.slug} event={event} />
-          ))}
-        </div>
+        {events.length > 0 ? (
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {events.map((event) => (
+              <EventCard key={event.slug} event={event} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-2xl border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
+            No events on sale right now. Check back soon!
+          </div>
+        )}
+
       </div>
     </section>
   );

@@ -2,13 +2,20 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "../ui/button";
 import FormField from "./form-field";
 
-const LoginForm = () => {
+interface LoginFormProps {
+  callbackUrl?: string;
+}
+
+const LoginForm = ({ callbackUrl: initialCallbackUrl }: LoginFormProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = initialCallbackUrl || searchParams.get("callbackUrl") || "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -35,7 +42,7 @@ const LoginForm = () => {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: callbackUrl,
     });
     setLoading(false);
 
@@ -47,13 +54,17 @@ const LoginForm = () => {
       }
       return;
     }
-    router.push("/dashboard");
+    router.push(callbackUrl);
   };
 
   const handleResend = async () => {
     await authClient.sendVerificationEmail({ email, callbackURL: "/verify-email" });
     setResent(true);
   };
+
+  const signupLink = callbackUrl && callbackUrl !== "/dashboard"
+    ? `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/signup";
 
   return (
     <div>
@@ -134,14 +145,14 @@ const LoginForm = () => {
         type="button"
         variant="outline"
         className="h-12 w-full rounded-xl"
-        onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" })}
+        onClick={() => authClient.signIn.social({ provider: "google", callbackURL: callbackUrl })}
       >
         Continue with Google
       </Button>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         New here?{" "}
-        <Link href="/signup" className="font-medium text-foreground hover:underline">
+        <Link href={signupLink} className="font-medium text-foreground hover:underline">
           Create an account
         </Link>
       </p>

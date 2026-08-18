@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Plus, MapPin, CalendarDays, ChevronRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { buttonVariants } from "@/components/ui/button";
+import { getPrimaryImage } from "@/lib/events";
+
 
 const AdminEventsPage = async () => {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -64,10 +66,11 @@ const AdminEventsPage = async () => {
                 <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={e.image}
+                    src={getPrimaryImage(e.image)}
                     alt={e.title}
                     className="h-full w-full object-cover"
                   />
+
                 </div>
                 <div>
                   <h3 className="font-heading text-lg font-semibold text-foreground group-hover:text-brass transition-colors">

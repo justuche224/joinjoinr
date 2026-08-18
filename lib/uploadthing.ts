@@ -1,28 +1,6 @@
-import "server-only"
-import { UTApi } from "uploadthing/server";
+import { genUploader } from "uploadthing/client";
+import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
-const utapi = new UTApi();
-
-export const uploadFile = async (file: File, type: string) => {
-    try {
-        const uuid = crypto.randomUUID();
-        const fileName = `${type}-${uuid}-${file.name}`;
-
-        const newFile = new File([file], fileName, {
-            type: file.type,
-            lastModified: file.lastModified,
-        });
-
-        const uploadResponse = await utapi.uploadFiles(newFile);
-
-        if (!uploadResponse.data) {
-            throw new Error("No data returned from upload");
-        }
-
-        const docLink = uploadResponse.data.ufsUrl;
-        return docLink;
-    } catch (error) {
-        console.error("Error uploading file:", error);
-        throw new Error("File upload failed");
-    }
-};
+export const { uploadFiles, createUpload } = genUploader<OurFileRouter>({
+  package: "uploadthing/client",
+});

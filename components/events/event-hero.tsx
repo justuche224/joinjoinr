@@ -1,25 +1,22 @@
 import React from "react";
-import Image from "next/image";
 import Nav from "../shared/nav";
 import Countdown from "./countdown";
-import type { EventDetail } from "@/lib/events";
+import type { EventDetail } from "@/lib/events-types";
 
 const EventHero = ({
   event,
   nextSession,
 }: {
   event: EventDetail;
-  nextSession: EventDetail["sessions"][number];
+  nextSession?: EventDetail["sessions"][number];
 }) => {
   return (
     <section className="relative flex h-[70vh] min-h-125 w-full flex-col overflow-hidden bg-stage">
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={event.image}
-        alt={event.imageAlt}
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
+        alt={event.imageAlt || event.title}
+        className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-linear-to-t from-stage via-stage/60 to-stage/20" />
 
@@ -39,12 +36,14 @@ const EventHero = ({
             </p>
           </div>
 
-          <div>
-            <p className="mb-2 font-mono text-[10px] tracking-[0.2em] text-white/50 uppercase">
-              {event.sessions.length > 1 ? "Next date in" : "Starts in"}
-            </p>
-            <Countdown target={nextSession.datetime} />
-          </div>
+          {nextSession?.datetime && (
+            <div>
+              <p className="mb-2 font-mono text-[10px] tracking-[0.2em] text-white/50 uppercase">
+                {event.sessions.length > 1 ? "Next date in" : "Starts in"}
+              </p>
+              <Countdown target={nextSession.datetime} />
+            </div>
+          )}
         </div>
       </div>
     </section>

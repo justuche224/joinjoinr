@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus, Clock, Users, Calendar } from "lucide-react";
+import { ArrowLeft, Pencil, ExternalLink } from "lucide-react";
 import { db } from "@/lib/db";
-import { createSession, createTier } from "@/actions/admin";
+import { createSession } from "@/actions/admin";
 import { buttonVariants } from "@/components/ui/button";
+import { SessionCard } from "@/components/admin/session-card";
 
 const AdminEventDetail = async ({
   params,
@@ -46,7 +47,7 @@ const AdminEventDetail = async ({
           <ArrowLeft className="size-4" />
           Back to Events
         </Link>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
               {eventData.title}
@@ -55,8 +56,26 @@ const AdminEventDetail = async ({
               {eventData.venue} • {eventData.city}
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/events/${eventData.slug}`}
+              target="_blank"
+              className={buttonVariants({ variant: "ghost", size: "sm", className: "gap-1.5" })}
+            >
+              <ExternalLink className="size-3.5" />
+              View Live
+            </Link>
+            <Link
+              href={`/admin/events/${id}/edit`}
+              className={buttonVariants({ variant: "outline", size: "sm", className: "gap-1.5" })}
+            >
+              <Pencil className="size-3.5" />
+              Edit Event
+            </Link>
+          </div>
         </div>
       </div>
+
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_350px]">
         <div className="space-y-12">
@@ -73,55 +92,11 @@ const AdminEventDetail = async ({
             ) : (
               <div className="space-y-8">
                 {eventData.sessions.map((session) => (
-                  <div key={session.id} className="overflow-hidden rounded-2xl border border-border bg-card">
-                    <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
-                      <div>
-                        <h3 className="font-heading text-lg font-medium text-foreground">
-                          {session.label}
-                        </h3>
-                        <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><Calendar className="size-3.5"/> {session.datetime.toLocaleDateString()}</span>
-                          <span className="flex items-center gap-1.5"><Clock className="size-3.5"/> {session.time}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-6">
-                      <h4 className="mb-4 text-sm font-medium text-foreground">Ticket Tiers</h4>
-                      {session.tiers.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No tiers configured.</p>
-                      ) : (
-                        <div className="grid gap-3">
-                          {session.tiers.map((tier) => (
-                            <div key={tier.id} className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-                              <div>
-                                <p className="font-medium text-sm text-foreground">{tier.name}</p>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                                  <Users className="size-3" /> {tier.capacity} capacity
-                                </p>
-                              </div>
-                              <div className="font-mono text-sm font-semibold text-brass-ink">
-                                ₦{(tier.price / 100).toFixed(2)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Add Tier Form */}
-                      <form action={createTier.bind(null, session.id, eventData.id)} className="mt-6 border-t border-border pt-6">
-                        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Add New Tier</p>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                          <input type="text" name="name" placeholder="Tier Name" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
-                          <input type="number" name="price" placeholder="Price (Kobo)" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
-                          <input type="number" name="capacity" placeholder="Capacity" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
-                          <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                            <Plus className="mr-2 size-3" /> Add Tier
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    eventId={eventData.id}
+                  />
                 ))}
               </div>
             )}
