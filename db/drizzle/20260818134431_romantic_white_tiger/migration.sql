@@ -1,0 +1,1 @@
+ALTER TABLE "order" ADD COLUMN "provider" text DEFAULT 'opay' NOT NULL;

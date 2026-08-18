@@ -6,7 +6,14 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { order, ticket, ticketTier, eventSession, event } from "@/db/schema"
 import { paymentService, OPayApiError } from "@/lib/payment"
+import { korapayPaymentService, KorapayApiError } from "@/lib/payment-korapay"
 import { inArray, eq } from "drizzle-orm"
+
+type PaymentProvider = "opay" | "korapay"
+
+function getActiveProvider(): PaymentProvider {
+  return process.env.PAYMENT_PROVIDER === "korapay" ? "korapay" : "opay"
+}
 
 /**
  * Utility to verify authenticated user session
@@ -38,19 +45,21 @@ export interface CreateEventCheckoutInput {
 
 export interface CheckoutResult {
   success: boolean
-  cashierUrl: string
+  checkoutUrl: string
   orderId: string
   reference: string
-  orderNo: string
+  orderNo?: string
 }
 
 /**
- * Server action to initiate an authenticated event ticket checkout with OPay Cashier
+ * Server action to initiate an authenticated event ticket checkout with the
+ * active payment provider (OPay or Korapay, selected via PAYMENT_PROVIDER)
  */
 export async function createEventPaymentCheckout(
   input: CreateEventCheckoutInput
 ): Promise<CheckoutResult> {
   const currentUser = await requireAuth()
+  const provider = getActiveProvider()
 
   const { sessionId, items, returnUrl, cancelUrl, callbackUrl } = input
 
@@ -116,6 +125,7 @@ export async function createEventPaymentCheckout(
     totalAmount: totalAmountKobo,
     status: "pending",
     paymentReference,
+    provider,
   })
 
   // 2. Pre-create reserved tickets for this order
@@ -138,8 +148,34 @@ export async function createEventPaymentCheckout(
     await db.insert(ticket).values(ticketsToInsert)
   }
 
-  // 3. Initiate payment with OPay Cashier
+  // 3. Initiate payment with the active provider
   try {
+    if (provider === "korapay") {
+      const paymentResponse = await korapayPaymentService.createPayment({
+        reference: paymentReference,
+        // Korapay's amount is in the currency's major unit (naira), unlike
+        // OPay's kobo convention, so convert down from the stored kobo total.
+        amount: totalAmountKobo / 100,
+        currency: "NGN",
+        redirect_url:
+          returnUrl || `${baseUrl}/api/payment/korapay/return`,
+        notification_url:
+          callbackUrl || `${baseUrl}/api/payment/korapay/webhook`,
+        narration: `Tickets for ${currentEvent.title} (${currentSession.label})`,
+        customer: {
+          email: currentUser.email,
+          name: currentUser.name,
+        },
+      })
+
+      return {
+        success: true,
+        checkoutUrl: paymentResponse.data.checkout_url,
+        orderId,
+        reference: paymentReference,
+      }
+    }
+
     const paymentResponse = await paymentService.createPayment({
       reference: paymentReference,
       country: "NG",
@@ -169,13 +205,13 @@ export async function createEventPaymentCheckout(
 
     return {
       success: true,
-      cashierUrl: paymentResponse.data.cashierUrl,
+      checkoutUrl: paymentResponse.data.cashierUrl,
       orderId,
       reference: paymentReference,
       orderNo: paymentResponse.data.orderNo,
     }
   } catch (error) {
-    // If OPay call fails, mark order as failed
+    // If the payment gateway call fails, mark order as failed
     await db
       .update(order)
       .set({ status: "failed", updatedAt: new Date() })
@@ -183,6 +219,9 @@ export async function createEventPaymentCheckout(
 
     if (error instanceof OPayApiError) {
       throw new Error(`Payment gateway error: ${error.message} (Code: ${error.code})`)
+    }
+    if (error instanceof KorapayApiError) {
+      throw new Error(`Payment gateway error: ${error.message}`)
     }
     throw error
   }
@@ -199,12 +238,14 @@ export interface GenericPaymentInput {
 }
 
 /**
- * General-purpose authenticated server action to create an OPay payment session
+ * General-purpose authenticated server action to create a payment session
+ * with the active provider (OPay or Korapay, selected via PAYMENT_PROVIDER)
  */
 export async function createGenericPayment(
   input: GenericPaymentInput
 ): Promise<CheckoutResult> {
   const currentUser = await requireAuth()
+  const provider = getActiveProvider()
 
   const {
     amountKobo,
@@ -235,9 +276,36 @@ export async function createGenericPayment(
     totalAmount: amountKobo,
     status: "pending",
     paymentReference,
+    provider,
   })
 
   try {
+    if (provider === "korapay") {
+      const paymentResponse = await korapayPaymentService.createPayment({
+        reference: paymentReference,
+        // Korapay's amount is in the currency's major unit (naira), unlike
+        // OPay's kobo convention, so convert down from the stored kobo total.
+        amount: amountKobo / 100,
+        currency: "NGN",
+        redirect_url:
+          returnUrl || `${baseUrl}/api/payment/korapay/return`,
+        notification_url:
+          callbackUrl || `${baseUrl}/api/payment/korapay/webhook`,
+        narration: productDescription,
+        customer: {
+          email: currentUser.email,
+          name: currentUser.name,
+        },
+      })
+
+      return {
+        success: true,
+        checkoutUrl: paymentResponse.data.checkout_url,
+        orderId,
+        reference: paymentReference,
+      }
+    }
+
     const paymentResponse = await paymentService.createPayment({
       reference: paymentReference,
       country: "NG",
@@ -267,7 +335,7 @@ export async function createGenericPayment(
 
     return {
       success: true,
-      cashierUrl: paymentResponse.data.cashierUrl,
+      checkoutUrl: paymentResponse.data.cashierUrl,
       orderId,
       reference: paymentReference,
       orderNo: paymentResponse.data.orderNo,
@@ -280,6 +348,9 @@ export async function createGenericPayment(
 
     if (error instanceof OPayApiError) {
       throw new Error(`Payment gateway error: ${error.message} (Code: ${error.code})`)
+    }
+    if (error instanceof KorapayApiError) {
+      throw new Error(`Payment gateway error: ${error.message}`)
     }
     throw error
   }

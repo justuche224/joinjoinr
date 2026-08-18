@@ -86,8 +86,8 @@ const TicketPanel = ({ sessions }: { sessions: Session[] }) => {
         items,
       });
 
-      if (result?.cashierUrl) {
-        window.location.href = result.cashierUrl;
+      if (result?.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
       } else {
         throw new Error("Unable to retrieve checkout URL from payment gateway.");
       }

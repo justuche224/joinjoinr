@@ -85,6 +85,8 @@ export default async function PaymentStatusPage({ searchParams }: PageProps) {
   const isCancelled = currentStatus === "cancelled"
   const isPending = currentStatus === "pending"
 
+  const providerLabel = orderData?.provider === "korapay" ? "Korapay" : "OPay"
+
   const firstTicket = ticketsList[0]
 
   return (
@@ -127,11 +129,11 @@ export default async function PaymentStatusPage({ searchParams }: PageProps) {
                 {isSuccess &&
                   "Your transaction was completed successfully. Your tickets have been issued and are available in your dashboard."}
                 {isFailed &&
-                  "Your payment could not be processed by OPay. Please check your payment details or try a different payment method."}
+                  `Your payment could not be processed by ${providerLabel}. Please check your payment details or try a different payment method.`}
                 {isCancelled &&
                   "You cancelled the payment transaction. No charges were made to your account."}
                 {isPending &&
-                  "We have received your payment request and are waiting for confirmation from OPay. This page will update shortly."}
+                  `We have received your payment request and are waiting for confirmation from ${providerLabel}. This page will update shortly.`}
               </p>
 
               {/* Order summary box */}
@@ -227,7 +229,7 @@ export default async function PaymentStatusPage({ searchParams }: PageProps) {
             {/* Security footer banner */}
             <div className="flex items-center justify-center gap-2 border-t border-border bg-muted/10 py-3 text-xs text-muted-foreground">
               <ShieldCheck className="size-4 text-emerald-500" />
-              <span>Payments securely processed by OPay Checkout</span>
+              <span>Payments securely processed by {providerLabel} Checkout</span>
             </div>
           </div>
         </div>
